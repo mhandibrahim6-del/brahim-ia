@@ -37,10 +37,13 @@ with st.sidebar:
     
     contenu_pdf = ""
     if pdf_file:
-        with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
-            for page in doc:
-                contenu_pdf += page.get_text()
-        st.success(f"✅ PDF chargé ! ({len(doc)} pages)")
+        pdf_bytes = pdf_file.read()
+doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+nb_pages = doc.page_count
+for page in doc:
+    contenu_pdf += page.get_text()
+doc.close()
+st.success(f"✅ PDF chargé ! ({nb_pages} pages)")
     
     st.markdown("---")
     st.markdown("## 🛠️ Mode")
