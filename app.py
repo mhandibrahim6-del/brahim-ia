@@ -1,6 +1,6 @@
 import streamlit as st
 from groq import Groq
-import fitz  # pymupdf
+import fitz
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
@@ -12,42 +12,35 @@ Tu utilises des emojis pour rendre les réponses agréables.
 Tu es spécialisé en informatique, mathématiques et intelligence artificielle.
 Si un document PDF est fourni, tu réponds en te basant sur son contenu."""
 
-# Design
 st.set_page_config(page_title="Brahim IA", page_icon="🎓", layout="centered")
 st.markdown("""
 <style>
-    .stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }
-    h1 { text-align: center; color: #a78bfa !important; font-size: 3em !important; }
-    .stCaption { text-align: center; color: #c4b5fd !important; font-size: 1.1em !important; }
+.stApp { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); }
+h1 { text-align: center; color: #a78bfa !important; font-size: 3em !important; }
+.stCaption { text-align: center; color: #c4b5fd !important; font-size: 1.1em !important; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🎓 Brahim IA")
 st.caption("✨ Ton assistant étudiant intelligent • PDF • Multilingue")
 
-# Barre latérale
 with st.sidebar:
     st.markdown("## ⚙️ Paramètres")
     prenom = st.text_input("👤 Ton prénom", placeholder="Entre ton prénom...")
     st.markdown("---")
-    
-    # Upload PDF
     st.markdown("## 📄 Uploader un PDF")
     pdf_file = st.file_uploader("Choisis un fichier PDF", type="pdf")
-    
     contenu_pdf = ""
     if pdf_file:
         pdf_bytes = pdf_file.read()
-doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-nb_pages = doc.page_count
-for page in doc:
-    contenu_pdf += page.get_text()
-doc.close()
-st.success(f"✅ PDF chargé ! ({nb_pages} pages)")
-    
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        nb_pages = doc.page_count
+        for page in doc:
+            contenu_pdf += page.get_text()
+        doc.close()
+        st.success(f"✅ PDF chargé ! ({nb_pages} pages)")
     st.markdown("---")
-    st.markdown("## 🛠️ Mode")
-    mode = st.selectbox("Fonctionnalité", [
+    mode = st.selectbox("🛠️ Fonctionnalité", [
         "💬 Conversation libre",
         "📝 Résumer le PDF",
         "🌍 Traduire un texte",
@@ -60,11 +53,9 @@ st.success(f"✅ PDF chargé ! ({nb_pages} pages)")
         st.session_state.messages = []
         st.rerun()
 
-# Initialiser
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Message de bienvenue
 if len(st.session_state.messages) == 0:
     nom = f" {prenom}" if prenom else ""
     with st.chat_message("assistant"):
@@ -73,14 +64,12 @@ if len(st.session_state.messages) == 0:
         else:
             st.markdown(f"👋 Salut{nom} ! Je suis **Brahim IA** ! Upload un PDF ou pose-moi n'importe quelle question ! 🚀")
 
-# Afficher historique
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Préparer le prompt
 def preparer_prompt(question, mode, contenu_pdf):
-    if "Résumer le PDF" in mode and contenu_pdf:
+    if "Résumer" in mode and contenu_pdf:
         return f"Résume ce document PDF de façon claire : {contenu_pdf[:4000]}"
     elif "Quiz" in mode and contenu_pdf:
         return f"Crée un quiz de 5 questions sur ce document : {contenu_pdf[:4000]}"
@@ -94,28 +83,24 @@ def preparer_prompt(question, mode, contenu_pdf):
         return f"En te basant sur ce document : {contenu_pdf[:4000]}\n\nQuestion : {question}"
     return question
 
-# Zone de saisie
 prompt = st.chat_input("Pose ta question ici...")
 
 if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
-
     prompt_final = preparer_prompt(prompt, mode, contenu_pdf)
     systeme_final = SYSTEME
     if prenom:
         systeme_final += f"\nLe prénom de l'étudiant est {prenom}."
-
     with st.chat_message("assistant"):
         with st.spinner("Je réfléchis... 🧠"):
             reponse = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[{"role": "system", "content": systeme_final}] +
-                          st.session_state.messages[:-1] +
-                          [{"role": "user", "content": prompt_final}]
+                st.session_state.messages[:-1] +
+                [{"role": "user", "content": prompt_final}]
             )
             texte = reponse.choices[0].message.content
             st.markdown(texte)
-
     st.session_state.messages.append({"role": "assistant", "content": texte})
