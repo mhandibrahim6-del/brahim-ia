@@ -69,18 +69,19 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 def preparer_prompt(question, mode, contenu_pdf):
-    if "Résumer" in mode and contenu_pdf:
-        return f"Résume ce document PDF de façon claire : {contenu_pdf[:4000]}"
-    elif "Quiz" in mode and contenu_pdf:
-        return f"Crée un quiz de 5 questions sur ce document : {contenu_pdf[:4000]}"
+    if contenu_pdf:
+        if "Résumer" in mode:
+            return f"Voici le contenu complet d'un document PDF. Résume-le de façon claire et structurée :\n\n{contenu_pdf[:4000]}"
+        elif "Quiz" in mode:
+            return f"Voici le contenu d'un document PDF. Crée un quiz de 5 questions dessus :\n\n{contenu_pdf[:4000]}"
+        else:
+            return f"Voici le contenu d'un document PDF :\n\n{contenu_pdf[:4000]}\n\nQuestion de l'étudiant : {question}"
     elif "Traduire" in mode:
         return f"Traduis ce texte en français et en anglais : {question}"
     elif "code Python" in mode:
         return f"Génère du code Python propre et commenté pour : {question}"
     elif "Expliquer" in mode:
         return f"Explique ce concept simplement avec des exemples : {question}"
-    elif contenu_pdf:
-        return f"En te basant sur ce document : {contenu_pdf[:4000]}\n\nQuestion : {question}"
     return question
 
 prompt = st.chat_input("Pose ta question ici...")
