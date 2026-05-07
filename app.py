@@ -54,10 +54,8 @@ with st.sidebar:
 
     st.markdown("---")
     if st.button("🗑️ Nouvelle conversation"):
-        st.session_state.messages = []
-        st.session_state.contenu_pdf = ""
-        st.session_state.nom_pdf = ""
-        st.rerun()
+    st.session_state.messages = []
+    st.rerun()
 
 # Message de bienvenue
 if len(st.session_state.messages) == 0:
